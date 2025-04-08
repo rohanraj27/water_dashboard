@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>3D Cylindrical Water Tank Visualization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e6f2ff; /* Light background */
+      text-align: center;
+      padding: 40px;
+    }
+    .tank-container {
+      perspective: 800px;
+      display: inline-block;
+    }
+    .cylinder {
+      position: relative;
+      width: 120px;
+      height: 300px;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.5), rgba(173,216,230,0.2));
+      border-radius: 60px / 300px;
+      border: 3px solid #87CEFA;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.15);
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transform: rotateX(10deg);
+    }
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: rgba(173, 216, 230, 0.5); /* Light blue transparent */
+      border-top: 2px solid #1E90FF;
+      transition: height 1s ease;
+      box-shadow: inset 0 2px 6px rgba(30,144,255,0.3);
+    }
+    h2 {
+      color: #333;
+    }
+    #level-text {
+      font-size: 18px;
+      color: #1E90FF;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Water Level in EIE's Tank No 2</h2>
+  <div class="tank-container">
+    <div class="cylinder">
+      <div id="water" class="water" style="height: 0%"></div>
+    </div>
+  </div>
+  <div id="level-text">Loading...</div>
+
+  <script>
+    const channelID = "2911139";
+    const readAPIKey = "RGXWUSIKL53KX5OJ";
+    const tankHeight = 14; // cm
+
+    function fetchData() {
+      fetch(`https://api.thingspeak.com/channels/${channelID}/fields/1/last.json?api_key=${readAPIKey}`)
+        .then(response => response.json())
+        .then(data => {
+          const distance = parseFloat(data.field1);
+          const waterHeight = Math.max(0, tankHeight - distance);
+          const levelPercent = Math.min((waterHeight / tankHeight) * 100, 100);
+
+          document.getElementById("water").style.height = levelPercent + "%";
+          document.getElementById("level-text").innerText = `Water Level: ${waterHeight.toFixed(1)} cm (${levelPercent.toFixed(0)}%)`;
+        })
+        .catch(error => {
+          console.error("Error fetching data:", error);
+          document.getElementById("level-text").innerText = "Error reading data.";
+        });
+    }
+
+    fetchData();
+    setInterval(fetchData, 2000);
+  </script>
+</body>
+</html>
